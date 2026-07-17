@@ -2,7 +2,7 @@
 // DO NOT COMMIT TO GITHUB - Keep this file private
 
 window.firebaseConfig = {
-  apiKey: "AIzaSyB4fR4dZiZUcgzmP7hlhEiYVT-vUbgoeXc",
+  apiKey: "AIzaSyDLjfgJDCB75pDqOX37r7K_HSnShexNGmM",
   authDomain: "ets-goal-tracker.firebaseapp.com",
   databaseURL: "https://ets-goal-tracker-default-rtdb.firebaseio.com",
   projectId: "ets-goal-tracker",
