@@ -2,35 +2,66 @@ let db = null;
 let goals = [];
 
 function initApp() {
-  if (!window.firebaseConfig) return;
+  console.log('initApp called');
+  if (!window.firebaseConfig) {
+    console.error('NO CONFIG FOUND');
+    return;
+  }
+  console.log('config found, initializing firebase');
   firebase.initializeApp(window.firebaseConfig);
   db = firebase.database();
-  setTimeout(loadFromFirebase, 500);
+  console.log('firebase initialized, db =', db);
+  loadFromFirebase();
 }
 
 function loadFromFirebase() {
-  if (!db) return;
+  console.log('loadFromFirebase called');
+  if (!db) {
+    console.error('DB NOT INITIALIZED');
+    return;
+  }
+
   db.ref('goals').once('value').then(snapshot => {
+    console.log('snapshot received:', snapshot.val());
     const data = snapshot.val() || {};
+    console.log('data:', data);
     goals = Object.values(data).filter(g => g && typeof g === 'object');
+    console.log('parsed goals array:', goals);
     render();
+
     // Listen for future changes
     db.ref('goals').on('value', snap => {
+      console.log('listener fired, new data:', snap.val());
       const d = snap.val() || {};
       goals = Object.values(d).filter(g => g && typeof g === 'object');
+      console.log('listener updated goals:', goals);
       render();
     });
+  }).catch(err => {
+    console.error('loadFromFirebase error:', err);
   });
 }
 
 function render() {
+  console.log('render() called with goals:', goals);
+
   const list = document.getElementById('goalList');
   const dash = document.getElementById('dash');
+
+  console.log('list element:', list);
+  console.log('dash element:', dash);
+
+  if (!list || !dash) {
+    console.error('MISSING ELEMENTS: list=' + !!list + ', dash=' + !!dash);
+    return;
+  }
 
   const total = goals.length;
   const inProgress = goals.filter(g => g.status === 'in-progress').length;
   const completed = goals.filter(g => g.status === 'completed').length;
   const atRisk = goals.filter(g => g.status === 'at-risk').length;
+
+  console.log('stats:', { total, inProgress, completed, atRisk });
 
   dash.innerHTML = `
     <div class="card"><div class="num">${total}</div><div class="lbl">Total Goals</div></div>
@@ -40,10 +71,12 @@ function render() {
   `;
 
   if (!goals.length) {
+    console.log('no goals, showing empty state');
     list.innerHTML = '<div class="empty"><h2>No goals yet</h2><p>Create your first goal to get started</p></div>';
     return;
   }
 
+  console.log('rendering', goals.length, 'goals');
   list.innerHTML = goals.map(g => `
     <div class="goal-card">
       <div class="goal-header">
@@ -62,9 +95,11 @@ function render() {
       </div>
     </div>
   `).join('');
+  console.log('render complete');
 }
 
 function saveGoal() {
+  console.log('saveGoal called');
   const name = document.getElementById('f_goal').value;
   if (!name) return alert('Goal name required');
 
@@ -79,9 +114,13 @@ function saveGoal() {
     notes: document.getElementById('f_notes').value || ''
   };
 
+  console.log('saving goal:', goal);
   db.ref('goals/' + goal.id).set(goal).then(() => {
+    console.log('save successful');
     closeModal();
     showToast('Saved!');
+  }).catch(err => {
+    console.error('save error:', err);
   });
 }
 
@@ -137,4 +176,5 @@ document.getElementById('addBtn').onclick = () => {
 document.getElementById('cancelBtn').onclick = closeModal;
 document.getElementById('saveBtn').onclick = saveGoal;
 
+console.log('app.js loaded, waiting for DOMContentLoaded');
 window.addEventListener('DOMContentLoaded', initApp);
